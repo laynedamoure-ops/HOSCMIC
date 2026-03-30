@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoscmic - Magical Student ID</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #d4af37; --glow: rgba(212, 175, 55, 0.4); }
+        body { 
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            color: #eee; font-family: 'Quicksand', sans-serif; min-height: 100vh; overflow-x: hidden;
+        }
+        .cinzel { font-family: 'Cinzel Decorative', cursive; }
+        
+        /* Glassmorphism 3D Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 0 15px var(--glow);
+            border-radius: 24px;
+            transition: 0.5s ease-out;
+        }
+        .glass-card:hover { transform: translateY(-5px) scale(1.005); border-color: rgba(255, 255, 255, 0.2); }
+
+        /* House Themes */
+        .theme-Gryffindor { --accent: #ff4d4d; --glow: rgba(255, 77, 77, 0.3); }
+        .theme-Slytherin { --accent: #2ecc71; --glow: rgba(46, 204, 113, 0.3); }
+        .theme-Ravenclaw { --accent: #3498db; --glow: rgba(52, 152, 219, 0.3); }
+        .theme-Hufflepuff { --accent: #f1c40f; --glow: rgba(241, 196, 15, 0.3); }
+
+        .accent-text { color: var(--accent); text-shadow: 0 0 10px var(--glow); }
+        .accent-border { border-color: var(--accent); }
+        .accent-bg { background: var(--accent); }
+
+        input, select { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; padding: 6px 12px; font-size: 0.75rem; }
+        input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px var(--glow); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+
+    <div id="login-page" class="w-full max-w-md text-center py-20">
+        <h1 class="cinzel text-6xl mb-4 accent-text">HOSCMIC</h1>
+        <div class="glass-card p-10 mt-10">
+            <p class="cinzel text-sm tracking-widest mb-6 uppercase text-white/70">The Great Hall Entrance</p>
+            <input id="username" type="text" placeholder="Wizard_Name" class="w-full mb-5 text-center text-base">
+            <button onclick="startSorting()" class="w-full py-4 cinzel font-bold accent-bg text-black rounded-xl hover:brightness-110 transition shadow-lg">Reveal Destiny</button>
+        </div>
+    </div>
+
+    <div id="quiz-page" class="hidden w-full max-w-2xl">
+        <div class="glass-card p-12 relative overflow-hidden text-center">
+            <h2 id="question-text" class="text-3xl cinzel mb-12 leading-relaxed">...</h2>
+            <div id="options-container" class="grid gap-5"></div>
+        </div>
+    </div>
+
+    <div id="profile-page" class="hidden w-full max-w-4xl">
+        <div class="flex justify-between items-center mb-6 px-3">
+            <h2 class="cinzel text-2xl accent-text italic tracking-wider">The Great Hall</h2>
+            <button onclick="logout()" class="text-xs uppercase tracking-widest opacity-40 hover:opacity-100 italic transition">Mischief Managed</button>
+        </div>
+
+        <div id="main-card" class="glass-card overflow-hidden">
+            <div class="p-10 border-b border-white/5 flex flex-col md:flex-row gap-10 items-center">
+                <div class="relative group cursor-pointer" onclick="document.getElementById('file-input').click()">
+                    <div class="w-40 h-40 rounded-full border-4 accent-border overflow-hidden bg-gray-950 shadow-[0_0_25px_var(--glow)] transition group-hover:scale-105">
+                        <img id="profile-img" src="https://api.dicebear.com/8.x/rings/svg?seed=hoscmic" alt="pfp" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition rounded-full">
+                            <span class="text-3xl">📷</span>
+                            <span class="text-[10px] uppercase mt-1 font-bold">Change Photo</span>
+                        </div>
+                    </div>
+                    <div id="house-emblem" class="absolute -bottom-3 -right-3 w-16 h-16 rounded-full bg-black border-4 accent-border flex items-center justify-center text-4xl shadow-xl">✨</div>
+                    <input type="file" id="file-input" accept="image/*" class="hidden" onchange="uploadPhoto(this)">
+                </div>
+
+                <div class="flex-1 text-center md:text-left">
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <h1 id="p-name" class="cinzel text-5xl font-bold tracking-tighter">WIZARD NAME</h1>
+                        <span id="p-title" class="px-4 py-1.5 bg-white/5 rounded-full text-[10px] uppercase tracking-widest border border-white/10 accent-text font-bold">STUDENT</span>
+                    </div>
+                    <p id="p-house" class="accent-text cinzel tracking-[0.3em] text-2xl uppercase mt-1.5">House Name</p>
+                    <p id="p-bio" class="italic text-base opacity-60 mt-3 max-w-xl">"Magic is believing in yourself. If you can do that, you can make anything happen."</p>
+                </div>
+            </div>
+
+            <div class="p-10 grid md:grid-cols-3 gap-10 text-sm bg-white/[0.01]">
+                <div class="space-y-5">
+                    <h3 class="cinzel accent-text border-b border-white/10 pb-1 text-lg">Academic</h3>
+                    <div><label class="opacity-40 block mb-1">Year Level</label> <select id="in-year" class="w-full" onchange="updateData()"><option>Year 1</option><option>Year 2</option><option>Year 3</option><option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option></select></div>
+                    <div><label class="opacity-40 block mb-1">Favorite Subject</label> <select id="in-sub" class="w-full" onchange="updateData()"><option>Potions</option><option>Charms</option><option>DADA</option><option>Transfiguration</option><option>Herbology</option></select></div>
+                </div>
+                <div class="space-y-5">
+                    <h3 class="cinzel accent-text border-b border-white/10 pb-1 text-lg">Vital Records</h3>
+                    <div><label class="opacity-40 block mb-1">Birthday</label> <input type="date" id="in-birth" class="w-full" onchange="updateData()"></div>
+                    <div><label class="opacity-40 block mb-1">Enrollment Date</label> <p id="p-enroll" class="font-mono pt-1 text-xs tracking-wider">2026-03-30</p></div>
+                </div>
+                <div class="space-y-5">
+                    <h3 class="cinzel accent-text border-b border-white/10 pb-1 text-lg">House Pride</h3>
+                    <div class="bg-white/[0.03] p-5 rounded-xl text-center border border-white/5 shadow-inner">
+                        <p class="text-xs uppercase opacity-40 tracking-wider">Points Contributed</p>
+                        <p id="p-points" class="text-5xl font-bold cinzel mt-1 accent-text">150</p>
+                    </div>
+                    <div><label class="opacity-40 block">Status</label> <span class="text-green-400 font-bold">● Active</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let questions = [
+            { q: "Mana yang akan kamu pilih saat duel?", options: { "Gryffindor": "Mantra Expelliarmus", "Slytherin": "Mantra Kutukan Licik", "Ravenclaw": "Protego Totalum", "Hufflepuff": "Rictusempra" }},
+            { q: "Apa yang kamu cari?", options: { "Gryffindor": "Petualangan", "Slytherin": "Kekuasaan", "Ravenclaw": "Pengetahuan", "Hufflepuff": "Teman Sejati" }},
+            // ... Tambahkan 5 pertanyaan lagi di sini biar genap 7
+        ];
+
+        let scores = { "Gryffindor": 0, "Slytherin": 0, "Ravenclaw": 0, "Hufflepuff": 0 };
+        let currentIdx = 0;
+
+        window.onload = () => {
+            const saved = JSON.parse(localStorage.getItem('hoscmic_id_v3'));
+            if(saved) renderProfile(saved);
+        };
+
+        function startSorting() {
+            const name = document.getElementById('username').value;
+            if(!name) return alert("Hanya penyihir bernama yang boleh masuk!");
+            localStorage.setItem('temp_name', name);
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('quiz-page').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            if(currentIdx >= questions.length) return finalize();
+            const q = questions[currentIdx];
+            document.getElementById('question-text').innerText = q.q;
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            Object.entries(q.options).forEach(([h, txt]) => {
+                const b = document.createElement('button');
+                b.className = "p-5 glass-card hover:accent-bg hover:text-black transition uppercase text-xs tracking-widest cinzel font-bold shadow-lg";
+                b.innerText = txt;
+                b.onclick = () => { scores[h]++; currentIdx++; showQuestion(); };
+                container.appendChild(b);
+            });
+        }
+
+        function finalize() {
+            const house = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            const data = {
+                name: localStorage.getItem('temp_name'),
+                house: house,
+                year: 'Year 1',
+                subject: 'Potions',
+                birth: '',
+                enroll: new Date().toLocaleDateString(),
+                points: '150',
+                photo: null // Foto kosong di awal
+            };
+            localStorage.setItem('hoscmic_id_v3', JSON.stringify(data));
+            renderProfile(data);
+        }
+
+        function renderProfile(data) {
+            document.body.className = `flex flex-col items-center justify-center p-4 theme-${data.house}`;
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('quiz-page').classList.add('hidden');
+            document.getElementById('profile-page').classList.remove('hidden');
+
+            document.getElementById('p-name').innerText = data.name;
+            document.getElementById('p-house').innerText = data.house;
+            document.getElementById('p-enroll').innerText = data.enroll;
+            document.getElementById('p-points').innerText = data.points;
+            
+            document.getElementById('in-year').value = data.year;
+            document.getElementById('in-sub').value = data.subject;
+            document.getElementById('in-birth').value = data.birth;
+            
+            // Set foto jika ada
+            if (data.photo) {
+                document.getElementById('profile-img').src = data.photo;
+            } else {
+                // Default avatar kalau foto belum ada
+                document.getElementById('profile-img').src = `https://api.dicebear.com/8.x/rings/svg?seed=hoscmic-${data.house}`;
+            }
+
+            // Icon set
+            const icons = {"Gryffindor":"🦁","Slytherin":"🐍","Ravenclaw":"🦅","Hufflepuff":"🦡"};
+            document.getElementById('house-emblem').innerText = icons[data.house];
+        }
+
+        function uploadPhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 800000) return alert("Ukuran foto terlalu besar (maks 800KB) gng!"); // Limit biar local storage gak penuh
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Photo = e.target.result;
+                document.getElementById('profile-img').src = base64Photo;
+                
+                // Simpan ke local storage
+                const current = JSON.parse(localStorage.getItem('hoscmic_id_v3'));
+                current.photo = base64Photo;
+                localStorage.setItem('hoscmic_id_v3', JSON.stringify(current));
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateData() {
+            const current = JSON.parse(localStorage.getItem('hoscmic_id_v3'));
+            current.year = document.getElementById('in-year').value;
+            current.subject = document.getElementById('in-sub').value;
+            current.birth = document.getElementById('in-birth').value;
+            localStorage.setItem('hoscmic_id_v3', JSON.stringify(current));
+        }
+
+        function logout() {
+            if(confirm("Mischief Managed? Ini akan menghapus jejakmu di HP ini.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>
+</body>
+  </html>
